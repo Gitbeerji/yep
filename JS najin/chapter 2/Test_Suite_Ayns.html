@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>Test Suite</title>
+		<style>
+			#results li.pass { color: green;}
+			#results li.fail { color: red; }
+		</style>
+		<script>
+			(function(){
+				var queue = [], paused = false, results;
+				
+				this.test = function(name,fn){
+					queue.push(function(){
+						results = document.getElementById("results");
+						results = assert(true,name).appendChild(
+							document.createElement("ul"));
+						fn();
+					});
+					console.log(queue.length);
+					runTest();
+				};
+				
+				//在test函数内部调用，告诉测试套件暂行执行测试，知道测试组完成
+				this.pause = function(){
+					paused = true;
+				};
+				
+				//恢复测试，经过短暂的延迟，开始下一次测试的运行，旨在避免出现长时间运行的代码块
+				this.resume = function(){
+					paused = false;
+					setTimeout(runTest,1);
+				};
+				
+				//在测试排队时从列中移除时进行调用，用于检查当前套件目前是否没被暂停以及队列中是否有测试任务
+				//一旦满足情况，将从队列中取道一个测试并尝试执行它
+				//此外，测试组完成执行之后，runTest()会检查该套件目前是否暂停了，如果没暂停，runTest()将开始执行下一组测试
+				function runTest() {
+					if(!paused && queue.length){
+						queue.shift()();
+						if(!paused){
+							resume();
+						}
+					}
+				}
+				
+				//断言
+				this.assert = function assert(value,desc){
+					var li = document.createElement("li");
+					li.className = value ? "pass" : "fail";
+					li.appendChild(document.createTextNode(desc));
+					results.appendChild(li);
+					if(!value){
+						li.parentNode.parentNode.className = "fail";
+					}
+					return li;
+				};
+			})();
+			
+			window.onload = function(){
+				test("Async Test #1",function(){
+					pause();
+					setTimeout(function(){
+						assert(true,"First test completed");
+						resume();
+					},1000);
+				});
+				
+				test("Async Test #2",function(){
+					pause();
+					setTimeout(function(){
+						assert(true,"Second test completed");
+						resume();
+					},1000);
+				});
+			}
+		</script>
+	</head>
+	<body>
+		<ul id="results"></ul>
+	</body>
+</html>
