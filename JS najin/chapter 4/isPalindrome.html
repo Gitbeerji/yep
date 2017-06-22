@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>isPalindrome</title>
+		<link rel="stylesheet" href="../styles/assert.css" />
+		<script type="text/javascript" src="../scripts/assert.js"></script>
+	</head>
+	<body>
+		<script>
+			function isPalindrome(text){
+				if(!text) return false;
+				if(text.length <= 1 ) return true;
+				if(text.charAt(0) != text.charAt(text.length - 1)) return false;
+				return isPalindrome(text.substr(1,text.length-2));
+			}
+			
+			assert(isPalindrome("text"),"text is paindrome");
+			assert(isPalindrome("isasi"),"isasi is paindrome");
+			assert(isPalindrome("xxxxxxxxxxx"),"xxxxxxxxxxx is paindrome");
+			assert(isPalindrome("zxcvbnmnbvcxz"),"zxcvbnmnbvcxz is paindrome");
+			assert(isPalindrome("")," is paindrome");
+			assert(isPalindrome(null),"null is paindrome");
+			assert(isPalindrome(undefined),"undefined is paindrome");
+			
+			
+			function chirp(n){
+				return n > 1 ? chirp(n - 1) + "-chirp" : "chirp";
+			}
+			
+			assert(chirp(3) == "chirp-chirp-chirp",
+				"Calling the named function comes naturally.");
+		</script>
+	</body>
+</html>
