@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<link rel="stylesheet" href="../styles/assert.css">
+	<script src="../scripts/assert.js"></script>
+</head>
+<body>
+	<script>
+		function creep(){return this;}
+
+		assert(creep() === window,"Creeping in the window");
+
+		var sneak = creep;
+
+		assert(sneak() === window, "Sneaking in the window");
+
+		var ninja1 = {
+			skulk: creep
+		};
+
+		assert( ninja1.skulk() === ninja1, "The 1st ninja is skulking");
+	</script>
+</body>
+</html>
