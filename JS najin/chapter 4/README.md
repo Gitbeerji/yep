@@ -206,3 +206,193 @@ assert(!store.add(ninja),"But it was only added once");
 通过追踪函数的一个属性，可以达到跟踪函数的目的
 
 另一个有用的技巧是，通过暴露函数属性，我们可以对函数自身进行修改，该技巧可以用于记住以前计算的值，以便在未来计算时节约时间。
+
+
+#### 自记忆函数
+
+缓存记忆(memoization)是构建函数的过程，这种函数能够记住先前计算的结果。通过避免已经执行过的不必要复杂计算，这种方式可以显著提高性能。
+
+#### 缓存记忆昂贵的计算结果
+
+```javascript
+
+function isPrime(value) {    
+   if (!isPrime.anwers) isPrime.answer = {};    
+   if (isPrime.answer[value] != null) {   
+      return isPrime.answers[value];   
+   }   
+   var prime = value != 1; // 1 can never be prime;   
+   //判断value是否为1，不为1 prime = true 为1 prime = false；   
+   for (var i = 2; i < value; i++) {   
+      if (value % i == 0) {   
+         prime = false;   
+         break;   
+      }   
+   }   
+   return iPrime.answer[value] = prime;   
+}
+
+```
+
+缓存记忆有两个主要优点   
+
+- 在函数抵用获取之前计算结果的时候，最终用户享有性能优势   
+- 发生在幕后，完全无缝，最终用户和页面开发人员都无需任何特殊操作或为此做出任何额外的初始化工作    
+
+缺点
+
+- 为了提高性能，任何类型的缓存肯定会牺牲内存
+- 纯粹主义者可能认为缓存这个问题不应该与业务逻辑放在一起，一个函数或方法应该只做一件事，并把它做好
+- 汉南测试或测量一个算法的性能
+
+#### 缓存记忆 DOM元素
+
+通过元素的标签查询DOM元素集是相当常见的操作，但是性能可能不是特别好。我们可以利用新发现的缓存记忆特性创建一个缓存，用于保存已经匹配到的元素集。
+
+```javascript
+
+function getElements(name) {
+   if (!getElement.cache) getElements.cache = {};
+   return getElements.cache[name] = 
+      getElememnts.cache[name] ||
+      document.getElementsByTagName(name);
+}
+
+
+```
+记忆(缓存)代码非常简单，不会对整个查询过程增加太多的复杂性。   
+
+我们可以将状态和缓存信息存储在一个封装的独立位置上，不仅在代码组织上有好处，而且外部存储或缓存对象无需污染作用域，就可以获取性能提升。
+
+
+#### 伪造数组方法
+
+有时我们可能想创建一个包含一组数据的对象，如果只是集合，只需要创建一个数组即可，但是某些情况下，除了集合本身，可能会有更多的状态需要保存--比如与集合项有关的一些元数据。
+
+一种选择可能是，每次创建对象新版本的时候都创建一个新数组，然后将元数据作为属性或方法添加到这个新数组上，不过这个方式太慢了，更不说乏味了。
+
+
+```javascript
+
+var elems = {
+	length: 0,
+	add: function(elem) {
+		Array.prorotype.push.call(this,elem);
+		//push会增加length属性的值(会认为他是数组length属性)
+	},
+	gather: function(id) {
+		this.add(document.getElementById(id));
+	}
+};
+
+```
+
+这一节演示的边缘型“不法”行为，不仅揭示了上下文的超强特性，在函数参数处理的复杂性方面，给我们上了一堂很好的深入探讨课。
+
+### 可变长度的参数列表
+
+JavaScript的使用非常灵活，JavaScript灵活且强大的特性之一是函数可以接受任意数量的参数，这种灵活性可以让开发人员很好地进行函数控制，也因此才能编写出他们的应用程序
+
+利用灵活的参数列表
+
+- 如何给能接受任意参数的函数提供多个参数
+- 如何使用变长的参数列表实现函数重载
+- 如何理解并使用参数列表的length属性
+
+由于JavaScript没有函数重载(一种我们可能已经习惯的面向对象语言的功能)，参数列表的灵活性是获得其他语言类似重载功能的关键所在。
+
+#### 使用apply()支持可变参数
+
+所有的语言，有一些我们经常要做的事情，似乎都被语言的开发人员莫名其妙的忽略了，JavaScript也不例外。
+
+其中有一件奇怪的事情，就是查找数组中的最小值或最大值。在JavaScript中似乎没哟这两种功能，但如果随意探索的话，可能会发现Math对象有两个名为min() max()的方法。
+
+测试后发现每个方法都需要可变长度的参数列表，而不是数组，不一起提供是多么愚蠢。
+
+也就是说，Math.max()的调用，需要向如下这样：
+
+var biggest = Math.max(1,2);    
+var biggest = Math.max(1,2,3);
+var biggest = Math.max(1,2,3,4,5,6,7,8,9,10);
+
+思考一种简单的方式，支持将数组作为一个可变长度的参数列表。
+
+apply()方法！！！！
+
+```javascript 
+
+function smallest(array){
+	return Math.min.apply(Math,array);
+}
+
+function largest(array){
+	return Math.max.apply(Math,array);
+}
+
+```
+
+将Math对象指定为上下文，这是没有必要的(不管是什么上下文，min()和max()方法都能正常使用)，但在这种情况下，没有理由不让代码保持整洁。
+
+至此，我们知道了在调用函数时如何使用可变长度的参数列表，那就让我们看看如何声明自己的函数来接受这种参数吧。
+
+#### 函数重载
+
+##### 检测并遍历参数
+
+在其他更纯的面向对象语言里，方法重载通常是通过在同名方法(但不同参数)里声明不同的实现来达到目的的，但在JavaScript中并非如此，在JavaScript中，我们重载函数的时候只用一个实现，只不过这个实现内部是通过传入参数的特性和个数进行相应修改来达到目的的。
+
+如下代码中，我们要把多个对象的属性合并到一个跟对象上，这可能是影响继承的一个重要工具。
+
+```javascript
+	
+	function merge(root){
+		for (var i = 1; i < arguments.length; i++) {
+			for (var key in arguments[i]) {
+				root[key] = arguments[i][key];
+			}
+		}
+		return root;
+	}
+
+	var merged = merge(
+		{name: "Batou"},
+		{city: "Niihama"});
+
+```
+在JavaScript中，没有强制函数声明多少个参数就得传入多少参数，函数是否可以成功处理这个参数(或缺少的参数)完全取决于函数本身的定义，不过在这方面JavaScript没有强加规则。
+
+
+访问和遍历arguments集合特性是一种创建复杂且智能方法的强大机制，我们可以用它来检查任意函数的传入参数，以便让函数更灵活地操作这个参数，即使我们事先不知道要传入的参数到底是什么。
+
+##### 对arguments列表进行切片(slice)和取舍(dice)
+
+下一个示例中，我们构建一个函数，将第一个参数与剩余参数的最大值进行相乘，这可能不是特别适用于应用程序，但它是展示更多处理argumens参数技术的例子
+
+```javascript
+
+function multiMax(multi){
+	return multi * Math.max.apply(Math,
+		Array.prototype.slice.call(arguments,1));
+		//强制Array的slice()方法将arguments参数视为一个真正的数组，即使它不是。
+}
+
+
+```
+
+##### 函数重载方式
+
+定义一个函数重载时-- 基于传递的参数定义一个有很多不同功能的函数--很容易想像，根据目前我们所学的这种机制，检查参数列表并使用if-then后else-if子语句执行不同的行为，我们可以很容易实现一个函数，通常这种方法很好用，尤其在代码处理很简单的情况下。
+
+但是一旦事情开始变得开始有点复杂的话，大量的函数使用很快回导致代码笨拙。在本章节的剩余部分，我们将探讨一种可以创建多个相同名称函数的技术，但是根据期望参数的不同，每个函数也不同--可以写成独立且独特的匿名函数，而不是作为一个整体的if-the-else-if块。
+
+##### 函数的length属性
+
+length属性等于该函数声明时需要传入的形参数量
+
+因此对于一个函数，在参数方面我们可以确定两件事     
+- 通过其length属性，可以知道声明了多少命名参数   
+- 通过arguments.length，可以知道在调用时传入了多少参数
+
+让我们看看如何利用这个属性构建一个函数，利用参数个数的差异创建重载函数。
+
+##### 利用参数个数进行函数重载
