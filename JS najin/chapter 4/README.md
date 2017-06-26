@@ -396,3 +396,109 @@ length属性等于该函数声明时需要传入的形参数量
 让我们看看如何利用这个属性构建一个函数，利用参数个数的差异创建重载函数。
 
 ##### 利用参数个数进行函数重载
+
+基于传入得参数，有很多种方法可以判断并进行函数重载，一种通过的方法是，根据传入的参数的类型执行不同烦人操作，另一种方法是，可以通过某种特定的参数是否存在来进行判断。还有一种方法是通过传入参数的个数进行判断。
+
+假设在对象上有一个方法，根据传入参数的个数来执行不同的操作。如果想要冗长且完整的函数，则会像如下这样：
+
+```javascript
+
+var ninja = {
+
+	whatever: function() {
+		swith (arguments.length) {
+			case 0: 
+				break;
+			case 1:
+				break;
+			case 2:
+				break;
+		}
+	}
+
+}
+
+```
+
+在这种方式中，通过arguments参数获取实际传入的参数个数进行判断，每一种情况都会执行不同的操作。但这种方式不是很整洁
+
+让我们假设另一种方法。 如果按照如下思路， 添加想要的重载方式怎么样呢：
+
+```javascript 
+
+var ninja = {};    
+addMethod(ninja, 'whatever', function(){})；    
+addMethod(ninja, 'whatever', function(a){});   
+addMethod(ninja, 'whatever', function(a,b){});
+
+```
+在这里，先创建一个对象，然后使用同样的名称(whatever)将方法添加到该对象上，只不过每个重载的函数都是单独的，注意每个重载函数的参数个数都不相同，通过这种方式，我们真正为每个重载都创建了一个独立的匿名函数。
+
+```javascript
+
+function addMethod(object, name, fn) {
+	var old = object[name];
+	//保存原有的函数，因为调用的时候可能不匹配传入的参数
+	object[name] = function(){
+		//console.log('xx');
+		//通过了函数的嵌套，如果满足第一层条件就返回那个函数，否则就慢慢向下嵌套循环，知道符合条件，返回那个函数。
+		if(fn.length == arguments.length)
+			return fn.apply(this,arguments);
+			//如果该匿名函数的参数个数和实数个数匹配，就调用该函数
+		else if (typeof old == 'function')
+			return old.applay(this.arguments);
+			//如果传入的参数不匹配，则调用原有的参数 
+	}
+
+```
+
+addMethod()的第一次调用将创建一个新匿名函数，传入零个参数进行调用的时候将会调用该fn函数，由于此时ninja是一个新对象，所有这时候不用担心之前创建的方法。
+
+第二次调用addMethod()的时候，首先将之前的同名函数保存到一个变量old中，然后将新创建的匿名函数作为方法。新方法首先检查传入的参数个数是否为1，如果是，就调用刚才传入的fn函数；如果不是，则重新调用存储在old上的函数，重新调用该函数时，将会再次检查参数个数是否为零，继而调用参数个数为零的fn版本的函数。
+
+第三次调用addMethod()的时候，传入了一个接受两个参数的fn函数，然后判断逻辑相同：创建一个尼米你个函数做方法，判断如果传入参数的个数为2个，则调用2个参数的fn函数，并推迟之前创建1个参数的函数。
+
+这种方式就像剥洋葱皮一样，每一层都检查参数个数是否匹配，如果不匹配的话，就推迟上一层创建的函数。
+
+这里有一些技巧是关于内部匿名函数是如何访问到old和fn的，它涉及到一个叫闭包的概念。
+
+这是个绝佳的技巧，因为这些绑定函数实际上并没有存储于任何典型的数据结构中，而是在闭包里进行存储。
+
+应该注意的是，在使用这个特定的技巧时，需要注意一下几点。
+
+- 重载只适用于不同数量的参数，但并不区分类型、参数名称或其他东西，这些才是我们经常想做的事情。
+- 这样的重载方法会有一些函数调用的开销，我们要考虑在高性能的请况。
+
+#### 函数判断
+
+如何判断一个给定对象是一个函数的示例，并且是可以调用的。这看似是一个简单的任务，但确实有跨浏览器的问题。
+
+通常 typeof语句就可以完全满足这一要求，
+
+```javascript
+
+function ninja(){}
+
+assert(typeof ninja == 'function',
+	'Functions have a type of function');
+
+```
+
+这个应该是判断给定对象是否是函数的一个典型方式，如果我们测试的确实是一个函数，这种方式一直都是有效的的。但也有一些情况，这个测试可能会返回错误的结果，需要注意如下事项.
+
+- Firefox --在HTML的<object>元素上使用typeof的话，会返回function，而不是我们期望的object。
+- Internet Explorer -- 如果对其他窗口(比如iframe)的不存在对象进行类型判断，该类型会返回unknown
+- Safari -- Safari认为 DOM 的NodeList是一个function。 所以 typeof document.body.childNodes == 'function'
+
+这些特定的情况将会导致我们的代码出现问题，我们需要一个在所有目标浏览器下都能工作的解决方案，以便让我们判断这些特殊函数(或非函数)是否能够正确报告自身。
+
+这里有很多可能的探索途径，可惜的是几乎所有的方式都不能完美解决这个问题。例如，我们知道，函数有applay()和call()方法但是 Internet Explorer 的这些问题函数并没有这些方法。 有一个相当不错的方式是，将函数转换为一个字符串，根据其序列化值判断其类型，代码入下
+
+```javascript 
+
+function isFunction(fn){
+	return Object.prototype.toString.call(fn) == "[object Function]";
+}
+
+```
+
