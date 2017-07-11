@@ -258,7 +258,7 @@ Function.prototype.bind = function(){
 	var fn = this, args = Array.prototype.slice.call(arguments), object = arg.shift();
 
 	return function(){
-		return fn.apply(object,a);
+		return fn.apply(object,arg.concat(Array.prototype.slice.call(arguments)));
 	};
 };
 
@@ -279,3 +279,5 @@ assert( aFunction(), "Context is set properly");
 将自身方法作为Function的prototype属性的属性，以便将该方法附加到所有的函数上，而不是声明一个全局作用域的方法。
 
 重要的是要意识到，Prototype的bind()(或是我们自己实现的)，并不意味着它是apply()或call()的一个替代方法，记住，该方法的潜在目的是通过匿名函数和闭包控制后续执行的上下文，这个重要的区别使apply()和call()对事件处理程序和定时器的回调进行延迟执行特别有帮助。
+
+### 偏应用函数
